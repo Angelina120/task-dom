@@ -5,6 +5,13 @@
   Считаем, что всегда передается тег, допускающий вставку текста в качестве своего содержимого (P, DIV, I и пр.).
 */
 export function appendToBody(tag, content, count) {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < count; i++) {
+        const element = document.createElement(tag);
+        element.textContent = content;
+        fragment.appendChild(element);
+    }
+    document.body.appendChild(fragment);
 }
 
 /*
@@ -15,6 +22,22 @@ export function appendToBody(tag, content, count) {
   Сформированное дерево верните в качестве результата работы функции.
 */
 export function generateTree(childrenCount, level) {
+    const buildNode = (currentLevel) => {
+        const node = document.createElement('div');
+        node.className = `item_${currentLevel}`;
+
+        if (currentLevel < level) {
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < childrenCount; i++) {
+                fragment.appendChild(buildNode(currentLevel + 1));
+            }
+            node.appendChild(fragment);
+        }
+
+        return node;
+    };
+
+    return buildNode(1);
 }
 
 /*
@@ -26,4 +49,24 @@ export function generateTree(childrenCount, level) {
   Сформированное дерево верните в качестве результата работы функции.
 */
 export function replaceNodes() {
+    const tree = generateTree(2, 3);
+
+    // Находим узлы второго уровня внутри дерева
+    const nodesToReplace = Array.from(tree.querySelectorAll('.item_2'));
+
+    nodesToReplace.forEach((node) => {
+        const section = document.createElement('section');
+        // Копируем все атрибуты (включая class) через attributes
+        for (const { name, value } of node.attributes) {
+            section.setAttribute(name, value);
+        }
+        // Переносим детей
+        while (node.firstChild) {
+            section.appendChild(node.firstChild);
+        }
+        // Замена — короче и семантичнее, чем parentNode.replaceChild
+        node.replaceWith(section);
+    });
+
+    return tree;
 }
